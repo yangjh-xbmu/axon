@@ -7,7 +7,7 @@ set -euo pipefail
 # Default values
 TARGET_DIR=${1:-.}
 REPO_URL="https://github.com/yangjh-xbmu/axon.git"
-CLONE_DIR="./axon-temp-install"
+CLONE_DIR="/tmp/axon-temp-install"
 
 # --- Main Logic ---
 echo "Cloning Axon repository from $REPO_URL..."
