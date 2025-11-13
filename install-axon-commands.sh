@@ -1,121 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NAMESPACE="axon"
-TARGET="."
-SOURCE=""
-SOURCE_DIR=""
-FORCE=0
-ALL=0
-FILES=""
-QUIET=0
-SHOW_HELP=0
+# Simplified installer for Axon commands
+# Usage: curl ... | bash -s [namespace] [source_base_url]
+# Default namespace: axon
+# Default source: https://raw.githubusercontent.com/yangjh-xbmu/axon/main
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --target)
-      TARGET="$2"
-      shift 2
-      ;;
-    --namespace)
-      NAMESPACE="$2"
-      shift 2
-      ;;
-    --source)
-      SOURCE="$2"
-      shift 2
-      ;;
-    --source-dir)
-      SOURCE_DIR="$2"
-      shift 2
-      ;;
-    --all)
-      ALL=1
-      shift
-      ;;
-    --files)
-      FILES="$2"
-      shift 2
-      ;;
-    --force)
-      FORCE=1
-      shift
-      ;;
-    --quiet)
-      QUIET=1
-      shift
-      ;;
-    -h|--help)
-      SHOW_HELP=1
-      shift
-      ;;
-    *)
-      echo "Unknown option: $1"
-      exit 1
-      ;;
-  esac
-done
+NAMESPACE=${1:-axon}
+SOURCE=${2:-https://raw.githubusercontent.com/yangjh-xbmu/axon/main}
+TARGET_DIR="./.claude/commands/$NAMESPACE"
 
-if [[ $SHOW_HELP -eq 1 ]]; then
-  echo "Usage: install-axon-commands.sh [options]"
-  echo "  --target <dir>        Target project root (default .)"
-  echo "  --namespace <name>    Commands sub-namespace (default axon)"
-  echo "  --source <baseURL>    Remote base raw URL containing commands/"
-  echo "  --source-dir <dir>    Local source repo root containing commands/"
-  echo "  --all                 Copy entire commands directory (local mode)"
-  echo "  --files <csv>         Comma-separated list relative to commands/"
-  echo "  --force               Overwrite existing files"
-  echo "  --quiet               Minimal output"
-  echo "  -h, --help            Show help"
-  exit 0
-fi
+echo "Installing Axon commands to $TARGET_DIR..."
 
-TARGET_DIR="$TARGET/.claude/commands/$NAMESPACE"
 mkdir -p "$TARGET_DIR"
 
-installed=()
+# List of commands to install
+COMMANDS=("init.md")
 
-if [[ -n "$SOURCE_DIR" && $ALL -eq 1 ]]; then
-  tar -C "$SOURCE_DIR/commands" -cf - . | tar -C "$TARGET_DIR" -xpf -
-  mapfile -t installed < <(cd "$TARGET_DIR" && find . -type f -name "*.md" | sed 's/^\.\///')
-else
-  list=("init.md")
-  if [[ -n "$FILES" ]]; then
-    IFS=',' read -r -a list <<< "$FILES"
+for cmd_file in "${COMMANDS[@]}"; do
+  url="$SOURCE/commands/$cmd_file"
+  dest="$TARGET_DIR/$cmd_file"
+  
+  echo "Downloading $url to $dest"
+  if ! curl -fsSL "$url" -o "$dest"; then
+    echo "Error: Failed to download $url"
+    exit 1
   fi
-  for f in "${list[@]}"; do
-    ddir="$TARGET_DIR/$(dirname "$f")"
-    mkdir -p "$ddir"
-    dest="$TARGET_DIR/$f"
-    if [[ $FORCE -eq 0 && -f "$dest" ]]; then
-      [[ $QUIET -eq 1 ]] || echo "Already exists: $dest"
-      continue
-    fi
-    if [[ -n "$SOURCE_DIR" ]]; then
-      src="$SOURCE_DIR/commands/$f"
-      if [[ ! -f "$src" ]]; then
-        echo "Missing source: $src"
-        exit 1
-      fi
-      cp "$src" "$dest"
-    else
-      base="${SOURCE:-https://raw.githubusercontent.com/you/axon/main}"
-      url="$base/commands/$f"
-      curl -fsSL "$url" -o "$dest"
-    fi
-    if [[ ! -s "$dest" ]]; then
-      echo "Install failed: $dest missing or empty"
-      exit 1
-    fi
-    installed+=("$f")
-    [[ $QUIET -eq 1 ]] || echo "Installed: $dest"
-  done
-fi
+  
+  if [[ ! -s "$dest" ]]; then
+    echo "Error: Downloaded file $dest is empty. Please check the source URL."
+    rm "$dest"
+    exit 1
+  fi
+done
 
-if [[ ${#installed[@]} -eq 0 ]]; then
-  [[ $QUIET -eq 1 ]] || echo "Installed directory: $TARGET_DIR"
-else
-  [[ $QUIET -eq 1 ]] || echo "Installed files: ${installed[*]}"
-fi
-
-[[ $QUIET -eq 1 ]] || echo "Use in Claude Code: /init (scope project:$NAMESPACE)"
+echo ""
+echo "Installation complete."
+echo "You can now use the /init command in this project (scope: project:$NAMESPACE)."
