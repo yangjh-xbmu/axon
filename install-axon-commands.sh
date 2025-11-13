@@ -1,39 +1,50 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Simplified installer for Axon commands
-# Usage: curl ... | bash -s [namespace] [source_base_url]
-# Default namespace: axon
-# Default source: https://raw.githubusercontent.com/yangjh-xbmu/axon/main
+# Installer for Axon commands
+# Clones the repo, and copies the commands to the target project.
 
-NAMESPACE=${1:-axon}
-SOURCE=${2:-https://raw.githubusercontent.com/yangjh-xbmu/axon/main}
-TARGET_DIR="./.claude/commands/$NAMESPACE"
+# Default values
+TARGET_DIR=${1:-.}
+REPO_URL="https://github.com/yangjh-xbmu/axon.git"
+CLONE_DIR="./axon-temp-install"
 
-echo "Installing Axon commands to $TARGET_DIR..."
+# --- Main Logic ---
+echo "Cloning Axon repository from $REPO_URL..."
 
-mkdir -p "$TARGET_DIR"
+# Clean up previous clone if it exists
+if [ -d "$CLONE_DIR" ]; then
+  rm -rf "$CLONE_DIR"
+fi
 
-# List of commands to install
-COMMANDS=("init.md")
+# Clone the repository
+if ! git clone --depth 1 "$REPO_URL" "$CLONE_DIR"; then
+  echo "Error: Failed to clone repository from $REPO_URL."
+  exit 1
+fi
 
-for cmd_file in "${COMMANDS[@]}"; do
-  url="$SOURCE/commands/$cmd_file"
-  dest="$TARGET_DIR/$cmd_file"
-  
-  echo "Downloading $url to $dest"
-  if ! curl -fsSL "$url" -o "$dest"; then
-    echo "Error: Failed to download $url"
+# Define source and destination for commands
+SOURCE_COMMANDS_DIR="$CLONE_DIR/commands"
+DEST_COMMANDS_DIR="$TARGET_DIR/.claude/commands/axon"
+
+if [ ! -d "$SOURCE_COMMANDS_DIR" ]; then
+    echo "Error: 'commands' directory not found in the cloned repository."
+    rm -rf "$CLONE_DIR"
     exit 1
-  fi
-  
-  if [[ ! -s "$dest" ]]; then
-    echo "Error: Downloaded file $dest is empty. Please check the source URL."
-    rm "$dest"
-    exit 1
-  fi
-done
+fi
+
+echo "Installing commands to $DEST_COMMANDS_DIR..."
+
+# Create destination directory
+mkdir -p "$DEST_COMMANDS_DIR"
+
+# Copy commands, overwriting existing files
+cp -rf "$SOURCE_COMMANDS_DIR/." "$DEST_COMMANDS_DIR/"
+
+# Clean up the cloned repository
+rm -rf "$CLONE_DIR"
 
 echo ""
 echo "Installation complete."
-echo "You can now use the /init command in this project (scope: project:$NAMESPACE)."
+echo "Axon commands have been installed to $DEST_COMMANDS_DIR."
+echo "You can now use commands like /init in this project."
