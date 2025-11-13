@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Installer for Axon commands
-# Clones the repo, and copies the commands to the target project.
+# Installer for Axon commands and configurations
+# Clones the repo, and copies the .claude directory contents to the target project.
 
 # Default values
 TARGET_DIR=${1:-.}
@@ -23,28 +23,27 @@ if ! git clone --depth 1 "$REPO_URL" "$CLONE_DIR"; then
   exit 1
 fi
 
-# Define source and destination for commands
-SOURCE_COMMANDS_DIR="$CLONE_DIR/axon/commands"
-DEST_COMMANDS_DIR="$TARGET_DIR/.claude/commands/axon"
+# Define source and destination for .claude contents
+SOURCE_DIR="$CLONE_DIR/.claude"
+DEST_DIR="$TARGET_DIR/.claude"
 
-if [ ! -d "$SOURCE_COMMANDS_DIR" ]; then
-    echo "Error: 'axon/commands' directory not found in the cloned repository."
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: '.claude' directory not found in the cloned repository."
     rm -rf "$CLONE_DIR"
     exit 1
 fi
 
-echo "Installing commands to $DEST_COMMANDS_DIR..."
+echo "Syncing .claude directory to $DEST_DIR..."
 
 # Create destination directory
-mkdir -p "$DEST_COMMANDS_DIR"
+mkdir -p "$DEST_DIR"
 
-# Copy commands, overwriting existing files
-cp -rf "$SOURCE_COMMANDS_DIR/." "$DEST_COMMANDS_DIR/"
+# Copy contents, overwriting existing files
+cp -rf "$SOURCE_DIR/." "$DEST_DIR/"
 
 # Clean up the cloned repository
 rm -rf "$CLONE_DIR"
 
 echo ""
 echo "Installation complete."
-echo "Axon commands have been installed to $DEST_COMMANDS_DIR."
-echo "You can now use commands like /init in this project."
+echo "The .claude directory has been synced from the Axon repository."
