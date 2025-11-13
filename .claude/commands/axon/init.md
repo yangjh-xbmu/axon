@@ -1,64 +1,40 @@
 ---
-description: 初始化新项目脚手架并设置 Git 仓库（/axon:init）
-argument-hint: [project-name] [remote-url]
-allowed-tools: Bash(mkdir:*), Bash(git init:*), Bash(git remote add origin:*), Bash(git status:*)
+description: 在当前项目中初始化 Git 仓库和 Axon 配置。
+allowed-tools: Bash(git init:*), Bash(mkdir:*), Bash(echo:*)
 ---
 
-目标：在当前工作目录下创建一个新项目并完成基础初始化。默认项目名为 `promo-engine`。
+目标：在当前项目根目录下初始化 Git 仓库并创建一个 `.axon` 目录，用于存放 AI 编程所需的必要资料。
 
-参数：
-
-- `$1` 为项目名（可选，默认使用 `promo-engine`）
-- `$2` 为远程仓库 URL（可选，例如 `https://github.com/you/promo-engine.git`）
+此命令假定您已位于项目的工作目录中。
 
 用法示例：
 
 ```text
 /axon:init
-/axon:init promo-engine
-/axon:init promo-engine https://github.com/you/promo-engine.git
-```
-
-变量：
-
-```bash
-PROJECT_NAME=${1:-promo-engine}
-REMOTE_URL=$2
 ```
 
 执行步骤（使用 Bash 工具按顺序运行）：
 
-- 创建项目根目录：
-
-```bash
-mkdir -p "$PROJECT_NAME"
-```
-
-- 创建核心目录结构：
-
-```bash
-mkdir -p "$PROJECT_NAME/docs/adr" "$PROJECT_NAME/src" "$PROJECT_NAME/tests"
-```
-
-- 初始化 Git（cwd 设置为 `./$PROJECT_NAME`）：
+- 初始化 Git 仓库：
 
 ```bash
 git init
 ```
 
-- 可选添加远程仓库（提供 `$2` 时，cwd 设置为 `./$PROJECT_NAME`）：
+- 创建 `.axon` 目录：
 
 ```bash
-git remote add origin "$REMOTE_URL"
+mkdir -p .axon
 ```
 
-- 验证（cwd 设置为 `./$PROJECT_NAME`）：
+- 在 `.axon` 目录中创建说明文件：
 
 ```bash
-git status
+echo "此目录用于存放 AI 编程所需的必要资料和配置文件。" \u003e .axon/README.md
 ```
 
 期望输出：
 
-- 已创建的目录结构列表：`docs/adr`、`src`、`tests`
-- Git 初始化状态与远程配置（如已提供）
+- 成功初始化 Git 仓库。
+- 成功创建 `.axon` 目录。
+- 在 `.axon` 目录中成功创建 `README.md` 文件。
