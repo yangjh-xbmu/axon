@@ -8,7 +8,9 @@ allowed-tools: Bash(git init:*, mkdir:*, echo:*)
 执行步骤：
 
 ```bash
-git init \u0026\u0026 mkdir -p .axon \u0026\u0026 echo "此目录用于存放 AI 编程所需的必要资料和配置文件。" \u003e .axon/README.md
+git init
+mkdir -p .axon 
+echo "此目录用于存放 AI 编程所需的必要资料和配置文件。" > .axon/README.md
 ```
 
 期望输出：
