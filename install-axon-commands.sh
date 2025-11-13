@@ -24,11 +24,11 @@ if ! git clone --depth 1 "$REPO_URL" "$CLONE_DIR"; then
 fi
 
 # Define source and destination for commands
-SOURCE_COMMANDS_DIR="$CLONE_DIR/axon"
+SOURCE_COMMANDS_DIR="$CLONE_DIR/axon/commands"
 DEST_COMMANDS_DIR="$TARGET_DIR/.claude/commands/axon"
 
 if [ ! -d "$SOURCE_COMMANDS_DIR" ]; then
-    echo "Error: 'axon' directory not found in the cloned repository."
+    echo "Error: 'axon/commands' directory not found in the cloned repository."
     rm -rf "$CLONE_DIR"
     exit 1
 fi
